@@ -100,17 +100,39 @@ Level nivoVode() {
 // Kontrolise LED diode
 // Input: (Level) nivoVode()
 //////////////////////////////////
-int ledcontrol(Level nivoVode) {
+void ledcontrol(Level nivoVode) {
   for (int i = red1; i <= green2; i++) {
     digitalWrite(i, LOW);
   }
   switch (nivoVode) {
-    case red1: digitalWrite(red1, HIGH); break;
-    case red2: digitalWrite(red2, HIGH); break;
-    case yellow1: digitalWrite(yellow1, HIGH); break;
-    case yellow2: digitalWrite(yellow2, HIGH); break;
-    case green1: digitalWrite(green1, HIGH); break;
-    case green2: digitalWrite(green2, HIGH); break;
+    case red1:
+      digitalWrite(red1, HIGH);
+      break;
+    case red2:
+      for (int i = red1; i <= red2; i++) {
+        digitalWrite(i, HIGH);
+      }
+      break;
+    case yellow1:
+      for (int i = red1; i <= yellow1; i++) {
+        digitalWrite(i, HIGH);
+      }
+      break;
+    case yellow2:
+      for (int i = red1; i <= yellow2; i++) {
+        digitalWrite(i, HIGH);
+      }
+      break;
+    case green1:
+      for (int i = red1; i <= green1; i++) {
+        digitalWrite(i, HIGH);
+      }
+      break;
+    case green2:
+      for (int i = red1; i <= green2; i++) {
+        digitalWrite(i, HIGH);
+      }
+      break;
   }
 }
 
@@ -150,14 +172,23 @@ void loop() {
     ledcontrol(nivoVode());
   }
 
-  if ((digitalRead(waterLossSwitch) == HIGH) {
-    if (baseLossLevel == 0) {
-        getBaseLossLevel();
+  if (digitalRead(waterLossSwitch) == HIGH) {
+    if (waterLoss == true) {
+      // Resetuje se waterLoss
+      waterLoss == false;
+    } else if (baseLossLevel == 0) {
+      // Dobija se nivo vode prije curenja
+      getBaseLossLevel();
     } else {
-        waterLoss = waterLossCheck(baseLossLevel);
-        baseLossLevel = 0;
-        Serial.println("WATER LOSS");
-     }
+      // Dobija se status postojanja curenja vode (waterLoss)
+      waterLoss = waterLossCheck(baseLossLevel);
+      baseLossLevel = 0;
+    }
+  }
+
+  if (waterLoss == true) {
+    // Ponavlja se ako je waterLoss == true
+    Serial.println("WATER LOSS");
   }
 
   delay(1000);
