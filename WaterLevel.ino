@@ -18,6 +18,7 @@ Level waterLevel = 0;
 // Podaci sa senzora
 long duration;
 int distance;
+int sensorMax = 350; // Maksimalna udaljenost (u cm) koju senzor moze da izmjeri (maks. ~400cm)
 
 // Water loss
 int baseLossLevel = 0;
@@ -39,7 +40,7 @@ void setup() {
     digitalWrite(i, LOW);
   }
 
-  // Privremeno bez prekidaca
+  // PRIVREMENO bez prekidaca
   getBaseLevel();
 }
 
@@ -69,12 +70,14 @@ int provjeraVode() {
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distance = duration * 0.034 / 2;
-  if ((distance < 350) || ((baseLevel != 0) && (distance < baseLevel))) {
+
+  if ((distance < sensorMax) || ((baseLevel != 0) && (distance < baseLevel))) {
     Serial.print("Distance: ");
     Serial.print(distance);
     Serial.println(" cm");
     return (distance);
-  } else if (distance > 350) {
+  } else {
+    // Ponovo ocitava nivo vode ukoliko dodje do greske
     provjeraVode();
   }
 }
@@ -98,7 +101,7 @@ Level nivoVode() {
 
 //////////////////////////////////
 // Kontrolise LED diode
-// Input: (Level) nivoVode()
+// Input: (Level) nivoVode
 //////////////////////////////////
 void ledcontrol(Level nivoVode) {
   for (int i = red1; i <= green2; i++) {
@@ -153,8 +156,7 @@ int getBaseLossLevel() {
 // Output: (bool) waterLoss
 //////////////////////////////////
 bool waterLossCheck(int baseLossLevel) {
-  // Dodaje 1 cm trenutnom nivou vode da bi se smanjila mogucnost greske
-  if (provjeraVode() + 1 < baseLossLevel) {
+  if (provjeraVode() < baseLossLevel) {
     return (true);
   } else {
     return (false);
@@ -163,6 +165,7 @@ bool waterLossCheck(int baseLossLevel) {
 
 
 void loop() {
+
   /* Sa prekidacem
     if(digitalRead(baseLevelSwitch) == HIGH){
     getBaseLevel();
