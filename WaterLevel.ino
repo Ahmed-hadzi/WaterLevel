@@ -18,7 +18,7 @@ Level waterLevel = 0;
 // Podaci sa senzora
 long duration;
 int distance;
-int sensorMax = 350; // Maksimalna udaljenost (u cm) koju senzor moze da izmjeri (maks. ~400cm)
+int sensorMax = 399; // Maksimalna udaljenost (u cm) koju senzor moze da izmjeri (maks. ~400cm)
 
 // Water loss
 int baseLossLevel = 0;
@@ -51,10 +51,10 @@ void setup() {
 //////////////////////////////////
 int getBaseLevel() {
   baseLevel = provjeraVode();
+  levelBreak = baseLevel / 6;
   Serial.print("baseLevel: ");
   Serial.print(baseLevel);
   Serial.println(" cm");
-  levelBreak = baseLevel / 6;
 }
 
 
