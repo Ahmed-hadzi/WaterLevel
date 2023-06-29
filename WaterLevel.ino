@@ -163,7 +163,11 @@ bool waterLossCheck(int baseLossLevel) {
   }
 }
 
-void waterLossLED(int waterLoss) {
+//////////////////////////////////
+// Kontrolise LED diode da prikaze postojanje water loss-a
+// Input: (bool) waterLoss
+//////////////////////////////////
+void waterLossLED(bool waterLoss) {
   if (waterLoss) {
     ledcontrol(red2);
     delay(2000);
