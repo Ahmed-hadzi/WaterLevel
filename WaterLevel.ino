@@ -163,6 +163,24 @@ bool waterLossCheck(int baseLossLevel) {
   }
 }
 
+void waterLossLED(int waterLoss) {
+  if (waterLoss) {
+    ledcontrol(red2);
+    delay(2000);
+    waterLoss = false;
+    return;
+  } else {
+    for (int i = red1; i <= green2; i++) {
+      digitalWrite(i, LOW);
+    }
+    for (int i = green1; i <= green2; i++) {
+      digitalWrite(i, HIGH);
+    }
+    delay(2000);
+    return;
+  }
+}
+
 
 void loop() {
 
@@ -176,16 +194,14 @@ void loop() {
   }
 
   if (digitalRead(waterLossSwitch) == HIGH) {
-    if (waterLoss == true) {
-      // Resetuje se waterLoss
-      waterLoss == false;
-    } else if (baseLossLevel == 0) {
+    if (baseLossLevel == 0) {
       // Dobija se nivo vode prije curenja
       getBaseLossLevel();
     } else {
       // Dobija se status postojanja curenja vode (waterLoss)
       waterLoss = waterLossCheck(baseLossLevel);
       baseLossLevel = 0;
+      waterLossLED(waterLoss);
     }
   }
 
