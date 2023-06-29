@@ -29,12 +29,15 @@ bool waterLoss = false;
 void setup() {
   Serial.begin(9600);
 
+  // Pinovi senzora
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
+  // Prekidaci
   pinMode(baseLevelSwitch, INPUT);
   pinMode(waterLossSwitch, INPUT);
 
+  // Gasi sve LED diode
   for (int i = red1; i <= green2; i++) {
     pinMode(i, OUTPUT);
     digitalWrite(i, LOW);
@@ -46,8 +49,8 @@ void setup() {
 
 
 //////////////////////////////////
-// Ocitava senzor kada nema vode
-// Output: (int) baseLevel, (int) levelBreak
+// Ocitava senzor kada je prazan rezervoar
+// Output: (int) levelBreak
 //////////////////////////////////
 int getBaseLevel() {
   baseLevel = provjeraVode();
@@ -55,11 +58,12 @@ int getBaseLevel() {
   Serial.print("baseLevel: ");
   Serial.print(baseLevel);
   Serial.println(" cm");
+  return(levelBreak);
 }
 
 
 //////////////////////////////////
-// Ocitava senzor
+// Ocitava senzor i racuna udaljenost vode
 // Output: (int) distance
 //////////////////////////////////
 int provjeraVode() {
@@ -84,11 +88,12 @@ int provjeraVode() {
 
 
 //////////////////////////////////
-// Pamti nivo vode
+// Odredjuje nivo vode (6 nivoa)
+// Input: (int) distance - udaljenost vode
 // Output: (Level) waterLevel
 //////////////////////////////////
-Level nivoVode() {
-  switch (provjeraVode() / levelBreak) {
+Level nivoVode(int distance) {
+  switch (distance / levelBreak) {
     case 0: case 1: return red1; break;
     case 2: return red2; break;
     case 3: return yellow1; break;
@@ -157,6 +162,7 @@ int getBaseLossLevel() {
 //////////////////////////////////
 bool waterLossCheck(int baseLossLevel) {
   if (provjeraVode() < baseLossLevel) {
+    // Ako je trenutni nivo vode manji od zapamcenog
     return (true);
   } else {
     return (false);
@@ -173,6 +179,7 @@ void waterLossLED(bool waterLoss) {
     delay(2000);
     waterLoss = false;
     return;
+    // Ako postoji waterLoss, pale se crvene LED diode na 2 sekunde
   } else {
     for (int i = red1; i <= green2; i++) {
       digitalWrite(i, LOW);
@@ -182,6 +189,7 @@ void waterLossLED(bool waterLoss) {
     }
     delay(2000);
     return;
+    // Ako ne postoji waterLoss, pale se zelene LED diode na 2 sekunde
   }
 }
 
@@ -194,24 +202,21 @@ void loop() {
     }*/
 
   if (baseLevel != 0) {
-    ledcontrol(nivoVode());
+    // Provjerava udaljenost vode, odredjuje nivo i pali LED diode
+    ledcontrol(nivoVode(provjeraVode()));
   }
 
   if (digitalRead(waterLossSwitch) == HIGH) {
     if (baseLossLevel == 0) {
-      // Dobija se nivo vode prije curenja
+      // Dobija se nivo vode prije potencijalnog curenja
       getBaseLossLevel();
     } else {
       // Dobija se status postojanja curenja vode (waterLoss)
       waterLoss = waterLossCheck(baseLossLevel);
       baseLossLevel = 0;
+      // Kontrolise LED diode sukladno waterLoss-u
       waterLossLED(waterLoss);
     }
-  }
-
-  if (waterLoss == true) {
-    // Ponavlja se ako je waterLoss == true
-    Serial.println("WATER LOSS");
   }
 
   delay(1000);
