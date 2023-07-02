@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 // Udaljenost senzora kad nema vode
 int baseLevel = 0;
 // Udaljenost nakon koje se promijeni nivo vode
@@ -16,12 +18,10 @@ Level waterLevel = 0;
 #define trigPin 3
 
 // Podaci sa senzora
-long duration;
 int distance;
-int sensorMax = 399; // Maksimalna udaljenost (u cm) koju senzor moze da izmjeri (maks. ~400cm)
+int sensorMax = 23300; // Maksimalna udaljenost koju senzor moze da izmjeri (4 metra / brzina zvuka) - mikrosekunde
 
 // Water loss
-int baseLossLevel = 0;
 bool waterLoss = false;
 
 
@@ -43,6 +43,10 @@ void setup() {
     digitalWrite(i, LOW);
   }
 
+  byte byte1 = EEPROM.read(1);
+  byte byte2 = EEPROM.read(2);
+  levelBreak = (byte1 << 8) + byte2;
+
 }
 
 
@@ -53,6 +57,8 @@ void setup() {
 int getBaseLevel() {
   baseLevel = provjeraVode();
   levelBreak = baseLevel / 6;
+  EEPROM.write(1, levelBreak >> 8);
+  EEPROM.write(2, levelBreak & 0xFF);
   Serial.print("baseLevel: ");
   Serial.print(baseLevel);
   Serial.println(" cm");
@@ -70,8 +76,7 @@ int provjeraVode() {
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance = duration * 0.034 / 2;
+  distance = pulseIn(echoPin, HIGH);
 
   if ((distance < sensorMax) || ((baseLevel != 0) && (distance < baseLevel))) {
     Serial.print("Distance: ");
@@ -145,13 +150,36 @@ void ledcontrol(Level nivoVode) {
 
 //////////////////////////////////
 // Pamti trenutni nivo vode za water loss check
-// Output: (int) baseLossLevel
 //////////////////////////////////
-int getBaseLossLevel() {
-  baseLossLevel = provjeraVode();
-  return (baseLossLevel);
+void getBaseLossLevel() {
+  int baseLossLevel = provjeraVode();
+  EEPROM.write(10, baseLossLevel >> 8);
+  EEPROM.write(11, baseLossLevel & 0xFF);
+  for (int i = red1; i <= green2; i++) {
+    digitalWrite(i, LOW);
+  }
+  delay(500);
+  ledcontrol(green2);
+  delay(2000);
 }
 
+//////////////////////////////////
+// Resetuje baseLossLevel u EEPROM-u na 0
+//////////////////////////////////
+void resetBaseLossLevel() {
+  EEPROM.write(10, 0 >> 8);
+  EEPROM.write(11, 0 & 0xFF);
+}
+
+//////////////////////////////////
+// Cita baseLossLevel iz EEPROM memorije
+// Output: (int) baseLossLevel
+//////////////////////////////////
+int readBaseLossLevel() {
+  byte byte1 = EEPROM.read(10);
+  byte byte2 = EEPROM.read(11);
+  return (byte1 << 8) + byte2;
+}
 
 //////////////////////////////////
 // Provjerava da li postoji water loss
@@ -159,8 +187,9 @@ int getBaseLossLevel() {
 // Output: (bool) waterLoss
 //////////////////////////////////
 bool waterLossCheck(int baseLossLevel) {
+
   if (provjeraVode() > baseLossLevel) {
-    // Ako je trenutni nivo vode manji od zapamcenog
+    // Ako je trenutna udaljenost vode veca od memorisane
     return (true);
   } else {
     return (false);
@@ -203,25 +232,19 @@ void loop() {
     getBaseLevel();
   }
 
-  if (baseLevel != 0) {
+  if (levelBreak != 0) {
     // Provjerava udaljenost vode, odredjuje nivo i pali LED diode
     ledcontrol(nivoVode(provjeraVode()));
   }
 
   if (digitalRead(waterLossSwitch) == HIGH) {
-    if (baseLossLevel == 0) {
+    if (readBaseLossLevel() == 0) {
       // Dobija se nivo vode prije potencijalnog curenja
       getBaseLossLevel();
-      for (int i = red1; i <= green2; i++) {
-        digitalWrite(i, LOW);
-      }
-      delay(500);
-      ledcontrol(green2);
-      delay(2000);
     } else {
       // Dobija se status postojanja curenja vode (waterLoss)
-      waterLoss = waterLossCheck(baseLossLevel);
-      baseLossLevel = 0;
+      waterLoss = waterLossCheck(readBaseLossLevel());
+      resetBaseLossLevel();
       // Kontrolise LED diode sukladno waterLoss-u
       waterLossLED(waterLoss);
     }
