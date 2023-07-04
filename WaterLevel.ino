@@ -118,12 +118,12 @@ int provjeraVode() {
 //////////////////////////////////
 Level nivoVode(int distance) {
   switch (distance / levelBreak) {
-    case 0: case 1: return green2; break;
-    case 2: return green1; break;
-    case 3: return yellow2; break;
-    case 4: return yellow1; break;
-    case 5: return red2; break;
-    case 6: return red1; break;
+    case 0: return green2; break;
+    case 1: return green1; break;
+    case 2: return yellow2; break;
+    case 3: return yellow1; break;
+    case 4: return red2; break;
+    case 5: case 6: return red1; break;
   }
 }
 
