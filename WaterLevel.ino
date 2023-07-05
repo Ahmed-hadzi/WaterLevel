@@ -19,7 +19,7 @@ Level waterLevel = 0;
 
 // Podaci sa senzora
 int distance;
-int sensorMax = 23300; // Maksimalna udaljenost koju senzor moze da izmjeri (4 metra / brzina zvuka) - mikrosekunde
+int sensorMax = 23300; // Maksimalna udaljenost koju senzor moze da izmjeri (4 metra / brzina zvuka * 2) - mikrosekunde
 
 // Water loss
 bool waterLoss = false;
