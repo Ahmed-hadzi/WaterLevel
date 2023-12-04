@@ -6,7 +6,7 @@ int baseLevel = 0;
 int levelBreak = 0;
 
 // Nivoi vode
-enum Level { off, red1 = 8, red2 = 9, yellow1 = 10, yellow2 = 11, green1 = 12, green2 = 13};
+enum Level { off, red1 = 6, red2 = 7, yellow1 = 8, yellow2 = 9, green1 = 10, green2 = 11};
 Level waterLevel = 0;
 
 // Pinovi prekidaca
